@@ -34,10 +34,14 @@ class MapSample extends StatefulWidget {
 class _MapSampleState extends State<MapSample> {
   Completer<GoogleMapController> _controller = Completer();
 
-  static final CameraPosition _kGooglePlex = CameraPosition(
-    target: LatLng(-1.3828923, 36.6735812),
-    zoom: 11.0,
-  );
+  final Set<Marker> _markers = {};
+
+//  static final CameraPosition _kGooglePlex = CameraPosition(
+//////    target: LatLng(-1.3828923, 36.6735812),
+//////    zoom: 11.0,
+//////  );
+
+  static const LatLng _center = const LatLng(-1.3828923, 36.6735812);
 
   static final CameraPosition _kLake = CameraPosition(
       bearing: 192.8334901395799,
@@ -55,6 +59,26 @@ class _MapSampleState extends State<MapSample> {
     });
   }
 
+  LatLng _lastMapPosition = _center;
+
+  void _onCameraMove(CameraPosition position) {
+    _lastMapPosition = position.target;
+  }
+
+  void _onAddMarkerButtonPressed() {
+    setState(() {
+      _markers.add(Marker(
+        markerId: MarkerId(_lastMapPosition.toString()),
+        position: _lastMapPosition,
+        infoWindow: InfoWindow(
+          title: 'Random Place',
+          snippet: '5 star Rating',
+        ),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRose),
+      ));
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
@@ -62,23 +86,42 @@ class _MapSampleState extends State<MapSample> {
         children: <Widget>[
           GoogleMap(
             mapType: _currentMapType,
-            initialCameraPosition: _kGooglePlex,
+            markers: _markers,
+            initialCameraPosition: CameraPosition(
+              target: _center,
+              zoom: 11.0,
+            ),
             onMapCreated: (GoogleMapController controller) {
               _controller.complete(controller);
             },
+            onCameraMove: _onCameraMove,
           ),
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: Align(
               alignment: Alignment.topRight,
-              child: FloatingActionButton(
-                onPressed: _onMapTypeButtonPressed,
-                materialTapTargetSize: MaterialTapTargetSize.padded,
-                backgroundColor: Colors.green,
-                child: const Icon(
-                  Icons.map,
-                  size: 36.0,
-                ),
+              child: Column(
+                children: <Widget>[
+                  FloatingActionButton(
+                    onPressed: _onMapTypeButtonPressed,
+                    materialTapTargetSize: MaterialTapTargetSize.padded,
+                    backgroundColor: Colors.green,
+                    child: const Icon(
+                      Icons.map,
+                      size: 36.0,
+                    ),
+                  ),
+                  SizedBox(height: 16.0),
+                  FloatingActionButton(
+                    onPressed: _onAddMarkerButtonPressed,
+                    materialTapTargetSize: MaterialTapTargetSize.padded,
+                    backgroundColor: Colors.green,
+                    child: const Icon(
+                      Icons.add_location,
+                      size: 36.0,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
